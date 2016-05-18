@@ -1,0 +1,3 @@
+{
+  "db": "postgres://fritzy@localhost/goalpost_test"
+}
