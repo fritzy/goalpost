@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "lab -a code -c -v"
+    "test": "lab -a code -c -v -l"
   },
   "author": "",
   "license": "MIT",
@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "code": "^2.3.0",
+    "eslint-config-andyet": "^2.0.0",
     "lab": "^10.5.1"
   }
 }

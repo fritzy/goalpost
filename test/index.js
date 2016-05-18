@@ -1,60 +1,65 @@
 'use strict';
 
+const Lodash = require('lodash');
 const lab = exports.lab = require('lab').script();
 const expect = require('code').expect;
-const Joi = require('joi');
-const config = require('getconfig');
-const lodash = require('lodash');
+const Config = require('getconfig');
+const GoalPost = require('../')(Config);
 
-const GoalPost = require('../')(config);
-
-process.on('uncaughtException', function (err) {
-  console.log(err.stack);
-});
-
-process.on('unhandledRejection', function (err) {
-  console.log(err.stack);
-});
+process.on('uncaughtException', (err) => console.log(err.stack));
+process.on('unhandledRejection', (err) => console.log(err.stack));
 
 lab.experiment('basic put and get', () => {
 
-  let testCollection = new GoalPost.Collection({
+  const testCollection = new GoalPost.Collection({
     name: 'test01'
   });
 
   lab.after((done) => {
+
     testCollection.destroy()
     .then(() => {
+
       done();
     });
   });
+
+  let id;
+  let r1;
 
   lab.test('put', (done) => {
 
     const data = {
       a: 1,
       b: 2
-    }
-    let id;
-    let r1;
+    };
 
     testCollection.put(data)
     .then((r) => {
+
       id = r.id;
-      console.log(r)
+      console.log(r);
       r1 = r;
-      return testCollection.get(r.id)
-    })
+      done();
+    });
+  });
+
+  lab.test('get', (done) => {
+
+    return testCollection.get(id)
     .then((r2) => {
+
       console.log('x', r2);
-      expect(lodash.isEqual(r1, r2)).to.equal(true);
+      expect(Lodash.isEqual(r1, r2)).to.equal(true);
       done();
     });
   });
 
   lab.test('find', (done) => {
-    testCollection.find({where: {a: 1, b: 2}})
+
+    testCollection.find({ where: { a: 1, b: 2 } })
     .then((results) => {
+
       console.log(results);
       done();
     });
