@@ -13,12 +13,13 @@ const versuf = String.prototype.split.call(pkg.version, '.').join('x');
 module.exports = (config) => {
 
   const db = pg(config.db);
-  const createQuery = new pg.QueryFile('./createCollection.sql');
-  const putQuery = new pg.QueryFile('./putCollection.sql');
-  const postQuery = new pg.QueryFile('./postCollection.sql');
-  const destroyQuery = new pg.QueryFile('./destroyCollection.sql');
-  const getQuery = new pg.QueryFile('./getCollection.sql', {debug: true});
-  const spQuery = new pg.QueryFile('./spCollection.sql');
+  const createQuery = new pg.QueryFile('./sql/createCollection.sql');
+  const whereFunc = `GOALPOST_WHERECLAUSEv${versuf}`;
+  const findFunc = `GOALPOST_FINDv${versuf}`;
+  const putFunc = `GOALPOST_PUTv${versuf}`;
+  const postFunc = `GOALPOST_POSTv${versuf}`;
+  const destroyFunc = `GOALPOST_DESTROYv${versuf}`;
+  const getFunc = `GOALPOST_GETv${versuf}`;
 
   class Collection extends wadofgum.mixin(wadofgumValidation, wadofgumProcess, wadofgumKeyMap) {
 
@@ -44,20 +45,17 @@ module.exports = (config) => {
       .then(() => {
       });
     }
-    /*
-     * {where {$or: [{}]}
-     */
 
     destroy() {
-      return db.query(destroyQuery, [this.name, `pk_${this.name}_seq`])
+      return db.func(destroyFunc, [this.name, `pk_${this.name}_seq`])
     }
 
     put(obj) {
       return this._ready()
       .then((db) => {
         if (obj[this.primary]) 
-          return db.query(putQuery, [this.name, obj[this.primary], obj], qrm.one);
-        return db.query(postQuery, [this.name, obj], qrm.one);
+          return db.func(putFunc, [this.name, obj[this.primary], obj], qrm.one);
+        return db.func(postFunc, [this.name, obj], qrm.one);
       })
       .then((results) => {
         const result = results.doc;
@@ -81,7 +79,7 @@ module.exports = (config) => {
     get(id) {
       return this._ready()
       .then(() => {
-        return db.query(getQuery, [this.name, id], qrm.one)
+        return db.func(getFunc, [this.name, id], qrm.one)
       })
       .then((results) => {
         const obj = results.doc;
@@ -94,7 +92,7 @@ module.exports = (config) => {
       return this._ready()
       .then(() => {
         console.log(JSON.stringify(opts))
-        return db.func('GOALPOST_FINDv1x0x0', [this.name, opts])
+        return db.func(findFunc, [this.name, opts])
       })
       .then((results) => {
         return results.map((result) => {
@@ -113,5 +111,9 @@ module.exports = (config) => {
 
   return {
     Collection,
+    funcs: {
+      where: whereFunc,
+      find: findFunc
+    }
   }
 }

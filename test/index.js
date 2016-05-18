@@ -12,6 +12,10 @@ process.on('uncaughtException', function (err) {
   console.log(err.stack);
 });
 
+process.on('unhandledRejection', function (err) {
+  console.log(err.stack);
+});
+
 lab.experiment('basic put and get', () => {
 
   let testCollection = new GoalPost.Collection({
@@ -45,9 +49,6 @@ lab.experiment('basic put and get', () => {
       console.log('x', r2);
       expect(lodash.isEqual(r1, r2)).to.equal(true);
       done();
-    })
-    .catch((e) => {
-      console.log(e.stack);
     });
   });
 

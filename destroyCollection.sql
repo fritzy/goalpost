@@ -1,5 +1,0 @@
-DO $$
-BEGIN
-  DROP TABLE $1~;
-  DROP SEQUENCE $2~;
-END$$
