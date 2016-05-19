@@ -38,7 +38,6 @@ lab.experiment('basic put and get', () => {
     .then((r) => {
 
       id = r.id;
-      console.log(r);
       r1 = r;
       done();
     });
@@ -49,7 +48,6 @@ lab.experiment('basic put and get', () => {
     return testCollection.get(id)
     .then((r2) => {
 
-      console.log('x', r2);
       expect(Lodash.isEqual(r1, r2)).to.equal(true);
       done();
     });
@@ -60,7 +58,6 @@ lab.experiment('basic put and get', () => {
     testCollection.find({ where: { a: 1, b: 2 } })
     .then((results) => {
 
-      console.log(results);
       done();
     });
   });

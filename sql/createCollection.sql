@@ -38,7 +38,7 @@ BEGIN
     FOR keys IN SELECT * FROM jsonb_each(wherej) ORDER BY key DESC LOOP
       IF keys.key = '$and' THEN
         queryt :=  queryt || ' AND (' || GOALPOST_WHERECLAUSEv$4^(keys.value) || ')';
-      ELSEIF keys.key = '$or' THEN
+
         queryt :=  queryt || ' OR (' || GOALPOST_WHERECLAUSEv$4^(keys.value) || ')';
       ELSE
         IF char_length(queryt) > 0 THEN
@@ -69,7 +69,7 @@ BEGIN
   RETURNS SETOF collection_type AS $put$
   BEGIN
     RETURN QUERY EXECUTE format('INSERT INTO %I (id, doc, created) VALUES (%L, %L, now())
-      ON CONFLICT (id) DO UPDATE SET doc=in_doc
+      ON CONFLICT (id) DO UPDATE SET doc=EXCLUDED.doc
       RETURNING id, doc, created, updated', tname, in_id, in_doc);
   END; $put$ LANGUAGE plpgsql;
   
