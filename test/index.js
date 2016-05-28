@@ -45,7 +45,7 @@ lab.experiment('basic put and get', () => {
 
   lab.test('get', (done) => {
 
-    return testCollection.get(id)
+    testCollection.get(id)
     .then((r2) => {
 
       expect(Lodash.isEqual(r1, r2)).to.equal(true);
@@ -55,9 +55,48 @@ lab.experiment('basic put and get', () => {
 
   lab.test('find', (done) => {
 
-    testCollection.find({ where: { a: 1, b: 2 } })
+    testCollection.put({ a: 3, b: 4 })
+    .then(() => {
+
+      return testCollection.find({ where: { a: 1, b: 2 } });
+    })
     .then((results) => {
 
+      expect(Lodash.isEqual(r1, results[0])).to.equal(true);
+      expect(results.length).to.equal(1);
+      return testCollection.find();
+    })
+    .then((results) => {
+
+      expect(results.length).to.equal(2);
+      done();
+    });
+  });
+
+  lab.test('delete', (done) => {
+
+    testCollection.find()
+    .then((results) => {
+
+      expect(results.length).to.equal(2);
+      return testCollection.delete(results[0].id);
+    })
+    .then(() => {
+
+      return testCollection.find();
+    })
+    .then((results) => {
+
+      expect(results.length).to.equal(1);
+      return testCollection.delete(results[0].id);
+    })
+    .then((res) => {
+
+      return testCollection.find();
+    })
+    .then((results) => {
+
+      expect(results.length).to.equal(0);
       done();
     });
   });

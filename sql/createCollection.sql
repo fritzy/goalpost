@@ -72,7 +72,13 @@ BEGIN
       ON CONFLICT (id) DO UPDATE SET doc=EXCLUDED.doc
       RETURNING id, doc, created, updated', tname, in_id, in_doc);
   END; $put$ LANGUAGE plpgsql;
-  
+
+  CREATE OR REPLACE FUNCTION GOALPOST_UPDATEv$4^(tname TEXT, in_doc JSONB)
+  RETURNS SETOF collection_type AS $put$
+  BEGIN
+    RETURN QUERY EXECUTE format('UPDATE %I SET doc = doc || in_doc, updated=now() WHERE id=%L INTO up_doc RETURNING id, doc, created, updated', tname, in_doc->>'id');
+  END; $put$ LANGUAGE plpgsql;
+
   CREATE OR REPLACE FUNCTION GOALPOST_POSTv$4^(tname TEXT, in_doc JSONB)
   RETURNS SETOF collection_type AS $put$
   BEGIN
@@ -85,11 +91,26 @@ BEGIN
     EXECUTE format('DROP TABLE %I', tname);
     EXECUTE format('DROP SEQUENCE %I', sname);
   END; $destroy$ LANGUAGE plpgsql;
-  
+
   CREATE OR REPLACE FUNCTION GOALPOST_GETv$4^(tname TEXT, in_id TEXT)
   RETURNS SETOF collection_type AS $get$
   BEGIN
     RETURN QUERY EXECUTE format('SELECT id, doc, created, updated FROM %I WHERE id=%L', tname, in_id);
- END; $get$ LANGUAGE plpgsql;
+  END; $get$ LANGUAGE plpgsql;
+
+  CREATE OR REPLACE FUNCTION GOALPOST_DELETEv$4^(tname TEXT, in_id TEXT)
+  RETURNS void AS $deleted$
+  BEGIN
+    EXECUTE format('DELETE FROM %I WHERE id=%L', tname, in_id);
+  END; $deleted$ LANGUAGE plpgsql;
+
+  CREATE OR REPLACE FUNCTION GOALPOST_DELETEWHEREv$4^(tname TEXT, in_where JSONB)
+  RETURNS SETOF collection_type AS $deletewhere$
+  DECLARE
+    queryt TEXT;
+  BEGIN
+    queryt := format('DELETE FROM %I WHERE ', tname) || GOALPOST_WHERECLAUSEv$4^(in_where) || ' RETURNING id';
+    RETURN QUERY EXECUTE queryt;
+  END; $deletewhere$ LANGUAGE plpgsql;
 
 END$$;

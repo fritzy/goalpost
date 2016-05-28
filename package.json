@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "lab -a code -c -v -l"
+    "test": "lab -a code -cv"
   },
   "author": "",
   "license": "MIT",

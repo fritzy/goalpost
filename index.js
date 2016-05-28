@@ -19,6 +19,8 @@ module.exports = (config) => {
   const postFunc = `GOALPOST_POSTv${versuf}`;
   const destroyFunc = `GOALPOST_DESTROYv${versuf}`;
   const getFunc = `GOALPOST_GETv${versuf}`;
+  const deleteFunc = `GOALPOST_DELETEv${versuf}`;
+  const deleteWhereFunc = `GOALPOST_DELETEWHEREv${versuf}`;
 
   class Collection extends Wadofgum.mixin(WadofgumValidation, WadofgumProcess, WadofgumKeyMap) {
 
@@ -26,8 +28,11 @@ module.exports = (config) => {
 
       super(opts);
       this.name = opts.name;
+
+      /* $lab:coverage:off$ */
       this.exists = opts.exists || false;
       this.primary = opts.primary || 'id';
+      /* $lab:coverage:on$ */
     }
 
     _ready() {
@@ -73,10 +78,23 @@ module.exports = (config) => {
       });
     }
 
-    delete(id) {
+    delete(input) {
 
       return this._ready()
       .then(() => {
+
+        if (typeof input === 'object') {
+          return db.func(deleteWhereFunc, [this.name, input])
+          .then((res) => {
+
+            return res;
+          });
+        }
+        return db.func(deleteFunc, [this.name, input])
+        .then((res) => {
+
+          return;
+        });
       });
     }
 
@@ -84,6 +102,7 @@ module.exports = (config) => {
 
       return this._ready()
       .then(() => {
+
       });
     }
 
