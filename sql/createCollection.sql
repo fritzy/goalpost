@@ -85,10 +85,10 @@ BEGIN
         RETURNING id, doc, created, updated', tname, in_id, in_doc);
     END; $put$ LANGUAGE plpgsql;
 
-    CREATE OR REPLACE FUNCTION GOALPOST_UPDATEv$4^(tname TEXT, in_doc JSONB)
+    CREATE OR REPLACE FUNCTION GOALPOST_UPDATEv$4^(tname TEXT, in_id TEXT, in_doc JSONB)
     RETURNS SETOF collection_type AS $put$
     BEGIN
-      RETURN QUERY EXECUTE format('UPDATE %I SET doc = doc || in_doc, updated=now() WHERE id=%L INTO up_doc RETURNING id, doc, created, updated', tname, in_doc->>'id');
+      RETURN QUERY EXECUTE format('UPDATE %I SET doc = (doc || %L), updated=now() WHERE id=%L RETURNING id, doc, created, updated', tname, in_doc, in_id);
     END; $put$ LANGUAGE plpgsql;
 
     CREATE OR REPLACE FUNCTION GOALPOST_POSTv$4^(tname TEXT, in_doc JSONB)
@@ -116,13 +116,22 @@ BEGIN
     BEGIN
       EXECUTE format('DELETE FROM %I WHERE id=%L', tname, in_id);
     END; $deleted$ LANGUAGE plpgsql;
+    
+    CREATE OR REPLACE FUNCTION GOALPOST_SIZEOFv$4^(tname TEXT)
+    RETURNS BIGINT AS $sizeof$
+    DECLARE
+      sizeof BIGINT;
+    BEGIN
+      EXECUTE format('SELECT count(*) FROM %I', tname) INTO sizeof;
+      return sizeof;
+    END; $sizeof$ LANGUAGE plpgsql;
 
     CREATE OR REPLACE FUNCTION GOALPOST_DELETEWHEREv$4^(tname TEXT, in_where JSONB)
     RETURNS SETOF collection_type AS $deletewhere$
     DECLARE
       queryt TEXT;
     BEGIN
-      queryt := format('DELETE FROM %I WHERE ', tname) || GOALPOST_WHERECLAUSEv$4^(in_where) || ' RETURNING id';
+      queryt := format('DELETE FROM %I WHERE ', tname) || GOALPOST_WHERECLAUSEv$4^(in_where) || ' RETURNING id, doc, created, updated';
       RETURN QUERY EXECUTE queryt;
     END; $deletewhere$ LANGUAGE plpgsql;
 

@@ -18,6 +18,8 @@ module.exports = (config) => {
   const findFunc = `GOALPOST_FINDv${versuf}`;
   const putFunc = `GOALPOST_PUTv${versuf}`;
   const postFunc = `GOALPOST_POSTv${versuf}`;
+  const sizeofFunc = `GOALPOST_SIZEOFv${versuf}`;
+  const updateFunc = `GOALPOST_UPDATEv${versuf}`;
   const destroyFunc = `GOALPOST_DESTROYv${versuf}`;
   const getFunc = `GOALPOST_GETv${versuf}`;
   const deleteFunc = `GOALPOST_DELETEv${versuf}`;
@@ -69,10 +71,10 @@ module.exports = (config) => {
               /* $lab:coverage:on$ */
                 const payload = JSON.parse(msg.payload);
                 if (msg.channel === hint) {
-                  this.emit('updateHint', payload);
+                  this.emit('changeHint', payload);
                 }
                 else if (msg.channel === full) {
-                  this.emit('updateFull', payload);
+                  this.emit('changeFull', payload);
                 }
               }
             });
@@ -105,8 +107,14 @@ module.exports = (config) => {
 
     size(obj) {
 
-      this._ready()
+      return this._ready()
       .then(() => {
+
+        return db.func(sizeofFunc, [this.name], qrm.one)
+        .then((result) => {
+
+          return parseInt(result[sizeofFunc.toLowerCase()], 10);
+        });
       });
     }
 
@@ -153,11 +161,18 @@ module.exports = (config) => {
       });
     }
 
-    update(obj) {
+    update(id, obj) {
 
       return this._ready()
       .then(() => {
 
+        return db.func(updateFunc, [this.name, id, obj], qrm.one);
+      })
+      .then((results) => {
+
+        const obj2 = results.doc;
+        obj2[this.primary] = results.id;
+        return obj2;
       });
     }
 
@@ -196,7 +211,7 @@ module.exports = (config) => {
 
     list(opts) {
 
-      return find(opts);
+      return this.find(opts);
     }
 
   }

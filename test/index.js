@@ -29,7 +29,7 @@ lab.experiment('basic put and get', () => {
 
   lab.test('put', (done) => {
 
-    testCollection.once('updateHint', (hint) => {
+    testCollection.once('changeHint', (hint) => {
 
       expect(hint.id).to.equal(id);
       expect(hint.type).to.equal('put');
@@ -80,6 +80,43 @@ lab.experiment('basic put and get', () => {
     });
   });
 
+  lab.test('replace', (done) => {
+
+    r1.b = 3;
+    testCollection.put(r1)
+    .then((result) => {
+
+      expect(result.b).to.equal(3);
+      return testCollection.get(r1.id);
+    })
+    .then((result) => {
+
+      expect(result.b).to.equal(3);
+      done();
+    });
+  });
+
+  lab.test('update', (done) => {
+
+    r1.b = 3;
+    testCollection.update(r1.id, { b: 4 })
+    .then((result) => {
+
+      expect(result.b).to.equal(4);
+      return testCollection.get(r1.id);
+    })
+    .then((result) => {
+
+      expect(result.b).to.equal(4);
+      return testCollection.size();
+    })
+    .then((result) => {
+
+      expect(result).to.equal(2);
+      done();
+    });
+  });
+
   lab.test('delete', (done) => {
 
     let hintCount = 0;
@@ -87,10 +124,10 @@ lab.experiment('basic put and get', () => {
 
       hintCount++;
       if (hintCount === 2) {
-        testCollection.removeListener('updateHint', hintFunc);
+        testCollection.removeListener('changeHint', hintFunc);
       }
     };
-    testCollection.on('updateHint', hintFunc);
+    testCollection.on('changeHint', hintFunc);
 
     testCollection.find()
     .then((results) => {
@@ -100,12 +137,12 @@ lab.experiment('basic put and get', () => {
     })
     .then(() => {
 
-      return testCollection.find();
+      return testCollection.list();
     })
     .then((results) => {
 
       expect(results.length).to.equal(1);
-      return testCollection.delete(results[0].id);
+      return testCollection.delete({ a: results[0].a, b: results[0].b });
     })
     .then((res) => {
 
