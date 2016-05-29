@@ -29,6 +29,13 @@ lab.experiment('basic put and get', () => {
 
   lab.test('put', (done) => {
 
+    testCollection.once('updateHint', (hint) => {
+
+      expect(hint.id).to.equal(id);
+      expect(hint.type).to.equal('put');
+      done();
+    });
+
     const data = {
       a: 1,
       b: 2
@@ -39,7 +46,6 @@ lab.experiment('basic put and get', () => {
 
       id = r.id;
       r1 = r;
-      done();
     });
   });
 
@@ -54,6 +60,7 @@ lab.experiment('basic put and get', () => {
   });
 
   lab.test('find', (done) => {
+
 
     testCollection.put({ a: 3, b: 4 })
     .then(() => {
@@ -74,6 +81,16 @@ lab.experiment('basic put and get', () => {
   });
 
   lab.test('delete', (done) => {
+
+    let hintCount = 0;
+    const hintFunc = (hint) => {
+
+      hintCount++;
+      if (hintCount === 2) {
+        testCollection.removeListener('updateHint', hintFunc);
+      }
+    };
+    testCollection.on('updateHint', hintFunc);
 
     testCollection.find()
     .then((results) => {
@@ -96,6 +113,7 @@ lab.experiment('basic put and get', () => {
     })
     .then((results) => {
 
+      expect(hintCount).to.equal(2);
       expect(results.length).to.equal(0);
       done();
     });

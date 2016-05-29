@@ -4,6 +4,7 @@ const Wadofgum = require('Wadofgum');
 const WadofgumValidation = require('Wadofgum-validation');
 const WadofgumProcess = require('Wadofgum-process');
 const WadofgumKeyMap = require('Wadofgum-keymap');
+const EventEmitter = require('events').EventEmitter;
 const pg = require('pg-promise')();
 const qrm = pg.queryResult;
 const pkg = require('root-require')('./package.json');
@@ -22,11 +23,15 @@ module.exports = (config) => {
   const deleteFunc = `GOALPOST_DELETEv${versuf}`;
   const deleteWhereFunc = `GOALPOST_DELETEWHEREv${versuf}`;
 
+
   class Collection extends Wadofgum.mixin(WadofgumValidation, WadofgumProcess, WadofgumKeyMap) {
 
     constructor(opts) {
 
       super(opts);
+      EventEmitter.call(this);
+      this.listenClient = null;
+      this.listener = null;
       this.name = opts.name;
 
       /* $lab:coverage:off$ */
@@ -41,6 +46,56 @@ module.exports = (config) => {
         return Promise.resolve(db);
       }
       return db.query(createQuery, [this.name, `idx_${this.name}_gin`, `pk_${this.name}_seq`, versuf])
+      .then(() => {
+
+        return new Promise((resolve, reject) => {
+
+          this.listenClient = new pg.pg.Client(config.db);
+          this.listenClient.connect((err, client) => {
+
+            this.listener = client;
+            const hint = `goalpost_hint_${this.name}`;
+            const full = `goalpost_full_${this.name}`;
+            /* $lab:coverage:off$ */
+            if (err) {
+              return reject(err);
+            }
+            /* $lab:coverage:on$ */
+            this.listener = client;
+            client.on('notification', (msg) => {
+
+              /* $lab:coverage:off$ */
+              if (msg.name === 'notification') {
+              /* $lab:coverage:on$ */
+                const payload = JSON.parse(msg.payload);
+                if (msg.channel === hint) {
+                  this.emit('updateHint', payload);
+                }
+                else if (msg.channel === full) {
+                  this.emit('updateFull', payload);
+                }
+              }
+            });
+            client.query(`LISTEN goalpost_full_${this.name}`, (err) => {
+
+              /* $lab:coverage:off$ */
+              if (err) {
+                return reject(err);
+              }
+              /* $lab:coverage:on$ */
+              client.query(`LISTEN goalpost_hint_${this.name}`, (err) => {
+
+                /* $lab:coverage:off$ */
+                if (err) {
+                  return reject(err);
+                }
+                /* $lab:coverage:on$ */
+                return resolve();
+              });
+            });
+          });
+        });
+      })
       .then(() => {
 
         this.exists = true;
@@ -145,6 +200,8 @@ module.exports = (config) => {
     }
 
   }
+
+  Object.assign(Collection.prototype, EventEmitter.prototype);
 
   return {
     Collection,
